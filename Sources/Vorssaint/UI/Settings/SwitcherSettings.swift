@@ -17,6 +17,7 @@ struct SwitcherSettings: View {
     @AppStorage(DefaultsKey.switcherTakeOverSystemShortcuts) private var switcherTakeOverSystemShortcuts = false
     @AppStorage(DefaultsKey.switcherIconRowMode) private var switcherIconRowMode = false
     @AppStorage(DefaultsKey.switcherSimpleMode) private var switcherSimpleMode = false
+    @AppStorage(DefaultsKey.verticalWindowSwitcher) private var verticalWindowSwitcher = false
     @AppStorage(DefaultsKey.switcherMergeTabs) private var switcherMergeTabs = false
     @AppStorage(DefaultsKey.switcherWindowlessApps) private var switcherWindowlessApps = SwitcherWindowlessApps.fallback.rawValue
     @AppStorage(DefaultsKey.switcherMinimizedPlacement) private var switcherMinimizedPlacement = WindowSwitchMinimizedPlacement.normal.rawValue
@@ -98,6 +99,7 @@ struct SwitcherSettings: View {
     // MARK: - App switcher
 
     private var layout: SwitcherLayout {
+        if verticalWindowSwitcher { return .list }
         if switcherSimpleMode { return .simple }
         return switcherIconRowMode ? .icons : .windows
     }
@@ -105,13 +107,20 @@ struct SwitcherSettings: View {
     private func choose(_ layout: SwitcherLayout) {
         switch layout {
         case .windows:
+            verticalWindowSwitcher = false
             switcherSimpleMode = false
             switcherIconRowMode = false
         case .icons:
+            verticalWindowSwitcher = false
             switcherSimpleMode = false
             switcherIconRowMode = true
         case .simple:
+            verticalWindowSwitcher = false
             switcherSimpleMode = true
+        case .list:
+            verticalWindowSwitcher = true
+            switcherSimpleMode = false
+            switcherIconRowMode = false
         }
         AppSwitcher.shared.syncWithPreferences()
     }
@@ -142,6 +151,10 @@ struct SwitcherSettings: View {
                         SwitcherLayoutChoice(layout: .simple, title: pages.switcherLayoutSimple,
                                              caption: l10n.s.switcherSimpleModeCaption, selected: layout == .simple) {
                             choose(.simple)
+                        }
+                        SwitcherLayoutChoice(layout: .list, title: pages.switcherLayoutList,
+                                             caption: pages.switcherLayoutListCaption, selected: layout == .list) {
+                            choose(.list)
                         }
                     }
                 }
@@ -547,6 +560,24 @@ private struct SwitcherLayoutChoice: View {
                     }
                 }
             }
+        case .list:
+            VStack(spacing: 5) {
+                ForEach(0..<3, id: \.self) { index in
+                    HStack(spacing: 6) {
+                        RoundedRectangle(cornerRadius: 3, style: .continuous)
+                            .fill(index == 0 ? Color.accentColor : Color.white.opacity(0.35))
+                            .frame(width: 12, height: 12)
+                        RoundedRectangle(cornerRadius: 2, style: .continuous)
+                            .fill(index == 0 ? Color.white.opacity(0.9) : Color.white.opacity(0.35))
+                            .frame(width: 48, height: 4)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 12)
+                    .frame(height: 14)
+                    .background(index == 0 ? Color.accentColor.opacity(0.25) : Color.clear,
+                                in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+                }
+            }
         }
     }
 
@@ -567,8 +598,8 @@ private struct SwitcherLayoutChoice: View {
     }
 }
 
-/// The three ways the switcher can look; `simple` wins over `icons` when
+/// The four ways the switcher can look; `simple` wins over `icons` when
 /// both keys are set, as the switcher itself decides.
 private enum SwitcherLayout: Hashable {
-    case windows, icons, simple
+    case windows, icons, simple, list
 }

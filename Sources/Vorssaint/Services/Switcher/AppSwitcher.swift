@@ -2022,11 +2022,15 @@ final class AppSwitcher: ObservableObject {
     }
 
     private var currentPanelSize: CGSize {
-        let contentSize = usesIconRowLayout && !windows.isEmpty
+        let contentSize = if verticalWindowSwitcher {
+            SwitcherListLayout.panelSize(itemCount: windows.count)
+        } else {
+            usesIconRowLayout && !windows.isEmpty
             ? (simpleModeEnabled
-                ? (usesWindowRow ? iconRowLayout.simpleWindowPanelSize : iconRowLayout.simplePanelSize)
-                : iconRowLayout.panelSize)
+               ? (usesWindowRow ? iconRowLayout.simpleWindowPanelSize : iconRowLayout.simplePanelSize)
+               : iconRowLayout.panelSize)
             : grid.panelSize
+        }
         return CGSize(width: contentSize.width, height: contentSize.height + searchTopInset)
     }
 
@@ -2074,6 +2078,10 @@ final class AppSwitcher: ObservableObject {
 
     private var capturesPreviews: Bool {
         SwitcherSupport.capturesPreviews(simpleMode: simpleModeEnabled)
+    }
+    
+    private var verticalWindowSwitcher: Bool {
+        UserDefaults.standard.bool(forKey: DefaultsKey.verticalWindowSwitcher)
     }
 
     // MARK: - Placement screen
@@ -2134,8 +2142,10 @@ final class AppSwitcher: ObservableObject {
     private func recomputeLayouts(for items: [SwitcherItem]) {
         guard let screen = placementScreen ?? NSScreen.screens.first else { return }
         sessionPlacementVisibleFrame = screen.visibleFrame
+        
+        let maxColumns = verticalWindowSwitcher ? 1 : SwitcherSupport.userMaxColumns
         grid = SwitcherGrid.compute(count: max(items.count, 1), on: screen,
-                                    maxColumns: SwitcherSupport.userMaxColumns,
+                                    maxColumns: maxColumns,
                                     searchTopInset: searchTopInset)
         let appGroups = SwitcherSupport.appGroups(items: items)
         iconRowLayout = SwitcherIconRowLayout.compute(
