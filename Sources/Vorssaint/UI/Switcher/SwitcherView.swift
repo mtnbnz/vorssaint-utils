@@ -1288,7 +1288,7 @@ extension SwitcherView {
     private var windowList: some View {
         ScrollViewReader { proxy in
             ScrollView(.vertical, showsIndicators: false) {
-                LazyVStack(spacing: SwitcherListLayout.rowSpacing) {
+                VStack(spacing: SwitcherListLayout.rowSpacing) {
                     ForEach(Array(switcher.windows.enumerated()), id: \.element.id) { index, window in
                         SwitcherListRow(window: window,
                                         isSelected: index == switcher.selectedIndex,
