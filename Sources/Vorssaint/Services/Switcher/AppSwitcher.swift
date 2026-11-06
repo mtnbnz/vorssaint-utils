@@ -1525,7 +1525,7 @@ final class AppSwitcher: ObservableObject {
                                                              preferredID: preferredItemID,
                                                              previousIndex: selectedIndex)
         recomputeLayouts(for: windows)
-        resizePanel()
+        resizePanel(animated: false)
     }
 
     func closeWindow(_ item: SwitcherItem) {
