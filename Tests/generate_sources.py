@@ -1936,8 +1936,10 @@ def main():
           + "extension SwitcherSearchLayoutTests {\n"
           + declaration(switcher_service, "struct SwitcherGrid:")
           + declaration(switcher, "private enum SwitcherIconStyle {").replace("private enum", "enum", 1)
+          + declaration(switcher, "enum SwitcherListLayout {")
           + "}\nextension SwitcherSearchLayoutTests.Model {\n"
           + "typealias SwitcherGrid = SwitcherSearchLayoutTests.SwitcherGrid\n"
+          + "typealias SwitcherListLayout = SwitcherSearchLayoutTests.SwitcherListLayout\n"
           + "".join(declaration(switcher_service, prefix).replace("private ", "", 1)
                     for prefix in ["    private var currentPanelSize:", "    var searchTopInset:",
                                    "    private func pinSearch()"])

@@ -149,6 +149,7 @@ enum SwitcherHoverSelectionTests {
         var usesIconRowLayout = false
         var usesWindowRow = false
         var simpleModeEnabled = false
+        var verticalWindowSwitcher = false
         var grid = Grid()
         var iconRowLayout = Row()
         var shiftBackNavigationHeld = false

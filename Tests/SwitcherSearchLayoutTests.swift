@@ -20,6 +20,7 @@ enum SwitcherSearchLayoutTests {
         var totalWindowCount = 987
         var grid = SwitcherGrid.empty
         var iconRowLayout = SwitcherIconRowLayout.empty
+        var verticalWindowSwitcher = false
         var recomputations = 0
         var resizes = 0
         var resizedTo = CGSize.zero
@@ -112,6 +113,8 @@ enum SwitcherSearchLayoutTests {
         var iconRowMode: Bool { switcher.usesIconRowLayout }
         var simpleMode: Bool { switcher.simpleModeEnabled }
         var usesWindowRow: Bool { switcher.usesWindowRow }
+        var verticalWindowSwitcher: Bool { switcher.verticalWindowSwitcher }
+        var listPanel: some View { Probe(name: "content") }
         var cardGrid: some View { Probe(name: "content") }
         var emptyState: some View { Probe(name: "content") }
         var iconRowSwitcher: some View {
