@@ -1864,9 +1864,10 @@ def main():
     click_bodies = re.findall(
         r"(?:onCommit|onSelect): \{\n(\s+switcher\.select\(index: (?:index|entry\.offset)\)\n"
         r"\s+switcher\.commitSession\(\)\n)\s*\}", (ROOT / switcher).read_text())
-    click_names = ["clickCard", "clickPreview", "clickTitle", "clickAppIcon", "clickWindowIcon"]
+    click_names = ["clickCard", "clickPreview", "clickTitle", "clickAppIcon", "clickWindowIcon",
+                   "clickListRow"]
     if len(click_bodies) != len(click_names):
-        raise ValueError("Expected all five switcher click callbacks")
+        raise ValueError(f"Expected {len(click_names)} switcher click callbacks, found {len(click_bodies)}")
     write("SwitcherHoverSelection.swift", "import AppKit\nimport Combine\n"
           + "extension SwitcherHoverSelectionTests {\n"
           + declaration(switcher_service, "private struct SwitcherSourceContext").replace("private struct", "struct", 1)
