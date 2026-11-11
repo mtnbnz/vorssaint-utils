@@ -1247,16 +1247,27 @@ enum SwitcherListLayout {
     static let padding: CGFloat = 8
     static let cornerRadius: CGFloat = 18
     static let rowCornerRadius: CGFloat = 10
-    /// Rows past this scroll, following the selection.
-    static let maxVisibleRows = 24
- 
-    static func visibleRows(itemCount: Int) -> Int {
-        max(1, min(itemCount, maxVisibleRows))
+    /// Share of the screen's visible height the panel may use, matching the grid.
+    static let usableHeightFraction: CGFloat = 0.85
+
+    /// Rows that fit on a screen with this visible frame; rows past this
+    /// scroll, following the selection. Always at least one.
+    static func maxVisibleRows(screenVisibleFrame: CGRect, searchTopInset: CGFloat = 0) -> Int {
+        let usableHeight = screenVisibleFrame.height * usableHeightFraction - searchTopInset
+        let fit = (usableHeight - padding * 2 + rowSpacing) / (rowHeight + rowSpacing)
+        return max(1, Int(fit))
     }
- 
-    /// Panel size without the search inset (add `searchTopInset` on top).
-    static func panelSize(itemCount: Int) -> CGSize {
-        let rows = CGFloat(visibleRows(itemCount: itemCount))
+
+    static func visibleRows(itemCount: Int, screenVisibleFrame: CGRect,
+                            searchTopInset: CGFloat = 0) -> Int {
+        max(1, min(itemCount, maxVisibleRows(screenVisibleFrame: screenVisibleFrame,
+                                             searchTopInset: searchTopInset)))
+    }
+
+    /// Panel size for this many shown rows, without the search inset (add
+    /// `searchTopInset` on top).
+    static func panelSize(visibleRows: Int) -> CGSize {
+        let rows = CGFloat(max(1, visibleRows))
         let height = rows * rowHeight
             + max(0, rows - 1) * rowSpacing
             + padding * 2
@@ -1267,7 +1278,7 @@ enum SwitcherListLayout {
 extension SwitcherView {
     /// The whole panel in list mode: one backdrop, rows stacked vertically.
     var listPanel: some View {
-        let size = SwitcherListLayout.panelSize(itemCount: switcher.windows.count)
+        let size = SwitcherListLayout.panelSize(visibleRows: switcher.listVisibleRows)
         let shape = RoundedRectangle(cornerRadius: SwitcherListLayout.cornerRadius, style: .continuous)
         return windowList
             .padding(SwitcherListLayout.padding)
@@ -1311,7 +1322,7 @@ extension SwitcherView {
                     }
                 }
             }
-            .scrollDisabled(switcher.windows.count <= SwitcherListLayout.maxVisibleRows)
+            .scrollDisabled(switcher.windows.count <= switcher.listVisibleRows)
             // A reverse start selects the last row before the list exists.
             .onAppear { revealSelection(in: proxy, animated: false) }
             .onChange(of: switcher.selectedIndex) { _, _ in

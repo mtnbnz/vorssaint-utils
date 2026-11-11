@@ -44,6 +44,9 @@ final class AppSwitcher: ObservableObject {
     }
     @Published private(set) var grid = SwitcherGrid.empty
     @Published private(set) var iconRowLayout = SwitcherIconRowLayout.empty
+    /// Rows the vertical list shows before scrolling; fitted to the placement
+    /// screen's height in `recomputeLayouts`.
+    @Published private(set) var listVisibleRows = 1
     /// First icon currently shown in an overflow row. The row steps this
     /// index by one when the pointer parks on the last visible icon.
     @Published private(set) var iconRowFirstVisibleIndex = 0
@@ -2023,7 +2026,7 @@ final class AppSwitcher: ObservableObject {
 
     private var currentPanelSize: CGSize {
         let contentSize = if verticalWindowSwitcher {
-            SwitcherListLayout.panelSize(itemCount: windows.count)
+            SwitcherListLayout.panelSize(visibleRows: listVisibleRows)
         } else {
             usesIconRowLayout && !windows.isEmpty
             ? (simpleModeEnabled
@@ -2147,6 +2150,9 @@ final class AppSwitcher: ObservableObject {
         grid = SwitcherGrid.compute(count: max(items.count, 1), on: screen,
                                     maxColumns: maxColumns,
                                     searchTopInset: searchTopInset)
+        listVisibleRows = SwitcherListLayout.visibleRows(itemCount: items.count,
+                                                         screenVisibleFrame: screen.visibleFrame,
+                                                         searchTopInset: searchTopInset)
         let appGroups = SwitcherSupport.appGroups(items: items)
         iconRowLayout = SwitcherIconRowLayout.compute(
             appCount: usesWindowRow ? items.count : appGroups.count,

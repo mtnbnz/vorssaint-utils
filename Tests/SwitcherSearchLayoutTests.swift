@@ -21,6 +21,7 @@ enum SwitcherSearchLayoutTests {
         var grid = SwitcherGrid.empty
         var iconRowLayout = SwitcherIconRowLayout.empty
         var verticalWindowSwitcher = false
+        var listVisibleRows = 1
         var recomputations = 0
         var resizes = 0
         var resizedTo = CGSize.zero
@@ -231,6 +232,21 @@ enum SwitcherSearchLayoutTests {
                                                        maxColumns: 2, searchTopInset: iconInset)
             suite.expect(icons.panelSize.height + iconInset <= screen.visibleFrame.height * 0.85 + 0.5,
                          "Switcher \(size): pinned search and wrapped icons share the \(height)-point screen budget")
+            for listInset in [0, gridInset] {
+                let rows = SwitcherListLayout.visibleRows(itemCount: 200, screenVisibleFrame: screen.visibleFrame,
+                                                          searchTopInset: listInset)
+                let list = SwitcherListLayout.panelSize(visibleRows: rows)
+                let oneMore = SwitcherListLayout.panelSize(visibleRows: rows + 1)
+                suite.expect(list.height + listInset <= screen.visibleFrame.height * 0.85 + 0.5,
+                             "Switcher \(size): the vertical list fits the \(height)-point screen budget (inset \(listInset))")
+                suite.expect(oneMore.height + listInset > screen.visibleFrame.height * 0.85,
+                             "Switcher \(size): the vertical list shows as many rows as fit at \(height) points")
+            }
+            suite.expect(SwitcherListLayout.visibleRows(itemCount: 3, screenVisibleFrame: screen.visibleFrame) == 3,
+                         "Switcher \(size): a short vertical list keeps one row per window at \(height) points")
         }
+        let tiny = CGRect(x: 0, y: 0, width: 800, height: 40)
+        suite.expect(SwitcherListLayout.visibleRows(itemCount: 10, screenVisibleFrame: tiny) == 1,
+                     "Switcher \(size): the vertical list always shows at least one row")
     }
 }
