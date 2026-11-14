@@ -211,19 +211,30 @@ enum DockClickSupport {
     /// looking at. A window parked on another Space therefore has no place in
     /// the result and can never be raised.
     ///
+    /// Minimized windows are not on screen anywhere, so they cannot be placed
+    /// by depth. They join the rotation behind every visible window, as
+    /// indices `windowIDs.count ..< windowIDs.count + minimizedCount` (the
+    /// caller lists them after the unminimized ones), which makes a minimized
+    /// window the next one a click brings back. Restoring one may move the
+    /// user to the Space it was minimized from; that is accepted, since
+    /// leaving minimized windows out made the rotation skip them entirely.
+    ///
     /// This is the single list behind both halves of the feature: `action`
     /// only promises `.cycleWindows` when it holds more than one window, and
     /// the raise takes its last element. Deciding from one set of windows and
     /// raising from another is what made a Dock click either loop over two
     /// windows forever or jump to a different desktop (issue #1204).
     static func cycleCandidateIndices(windowIDs: [CGWindowID?],
-                                      onScreenFrontToBack: [CGWindowID]) -> [Int] {
+                                      onScreenFrontToBack: [CGWindowID],
+                                      minimizedCount: Int = 0) -> [Int] {
         var depths: [(index: Int, depth: Int)] = []
         for (index, id) in windowIDs.enumerated() {
             guard let id, let depth = onScreenFrontToBack.firstIndex(of: id) else { continue }
             depths.append((index, depth))
         }
-        return depths.sorted { $0.depth < $1.depth }.map(\.index)
+        let visible = depths.sorted { $0.depth < $1.depth }.map(\.index)
+        let minimized = Array(windowIDs.count ..< windowIDs.count + max(minimizedCount, 0))
+        return visible + minimized
     }
 
     static func action(appIsFrontmost: Bool,

@@ -4826,6 +4826,24 @@ enum SwitcherModelFeatureTests {
         suite.expect(DockClickSupport.cycleCandidateIndices(windowIDs: [nil, nil],
                                                       onScreenFrontToBack: [1, 2]).isEmpty,
                "windows whose ids cannot be resolved are never guessed at")
+        // Minimized windows are off screen everywhere; they join the rotation
+        // behind the visible ones, so the next click restores one.
+        suite.expect(DockClickSupport.cycleCandidateIndices(windowIDs: [1],
+                                                      onScreenFrontToBack: [1],
+                                                      minimizedCount: 1) == [0, 1],
+               "one visible and one minimized window still make a rotation")
+        suite.expect(DockClickSupport.cycleCandidateIndices(windowIDs: [1, 2],
+                                                      onScreenFrontToBack: [2, 1],
+                                                      minimizedCount: 2).last == 3,
+               "the click restores a minimized window before revisiting the visible ones")
+        suite.expect(DockClickSupport.cycleCandidateIndices(windowIDs: [],
+                                                      onScreenFrontToBack: [],
+                                                      minimizedCount: 2) == [0, 1],
+               "an app whose windows are all minimized cycles through restoring them")
+        suite.expect(DockClickSupport.cycleCandidateIndices(windowIDs: windowsAcrossDesktops,
+                                                      onScreenFrontToBack: [3],
+                                                      minimizedCount: 1) == [2, 4],
+               "visible windows on other desktops stay out even when minimized ones join")
         suite.expect(DockClickSupport.repeatDecision(lastAction: .cycleWindows, elapsed: 0.5) == .deriveFromState,
                "a repeated click after a cycle keeps cycling from live state")
         suite.expect(DockClickSupport.repeatDecision(lastAction: .hide, elapsed: 0.5) == .deriveFromState,

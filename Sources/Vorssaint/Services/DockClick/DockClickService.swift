@@ -259,7 +259,9 @@ final class DockClickService {
             // common Dock click, and the count costs a window-server list plus
             // an id resolve per window inside the event tap.
             let cycleCandidateCount = cycleEnabled && frontmost && !windows.hasFullscreen
-                ? Self.cycleCandidates(pid: pid, windows: windows.unminimized).count
+                ? Self.cycleCandidates(pid: pid,
+                                       unminimized: windows.unminimized,
+                                       minimized: windows.minimized).count
                 : 0
             let hasUnminimized = DockClickSupport.effectiveHasUnminimized(
                 unminimizedCount: windows.unminimized.count,
@@ -328,9 +330,10 @@ final class DockClickService {
         case .cycleWindows:
             lastAction[pid] = ActionRecord(kind: .cycleWindows, time: now, targets: [])
             let unminimized = pending.unminimized
+            let minimized = pending.minimized
             DispatchQueue.main.async {
                 DockPreviewService.shared.dockClickWasHandled()
-                Self.cycleWindows(pid: pid, windows: unminimized)
+                Self.cycleWindows(pid: pid, unminimized: unminimized, minimized: minimized)
             }
         case .minimize:
             lastAction[pid] = ActionRecord(kind: .minimize, time: now, targets: pending.unminimized)
@@ -743,20 +746,24 @@ final class DockClickService {
         AXUIElementSetAttributeValue(window, kAXMinimizedAttribute as CFString, kCFBooleanFalse)
     }
 
-    /// Cycles through an app's windows on the current Space by raising the
-    /// rearmost one to the front, mimicking ⌘` (Command-Tilde) behavior.
+    /// Cycles through an app's windows by raising the rearmost one to the
+    /// front, mimicking ⌘` (Command-Tilde) behavior. Minimized windows count
+    /// as the rearmost, so the rotation restores them in turn.
     ///
     /// The rearmost window comes from the WindowServer's real z-order, not the
     /// AX windows array: that array keeps the focused window first, so
     /// "advance from the focused one" degenerates into flipping between the
     /// two frontmost windows and the rest are never visited. Raising the true
     /// rearmost window walks every window in round-robin order.
-    private static func cycleWindows(pid: pid_t, windows: [AXUIElement]) {
-        let candidates = cycleCandidates(pid: pid, windows: windows)
+    private static func cycleWindows(pid: pid_t, unminimized: [AXUIElement], minimized: [AXUIElement]) {
+        let candidates = cycleCandidates(pid: pid, unminimized: unminimized, minimized: minimized)
         // More than one only fails here when a window closed between the press
         // and the release; the click was decided on the same list.
         guard candidates.count > 1, let rearWindow = candidates.last else { return }
 
+        // Raising and focusing leave a minimized window in the Dock; it has to
+        // come back first. A no-op for a window that is already up.
+        restore(rearWindow)
         AXUIElementPerformAction(rearWindow, kAXRaiseAction as CFString)
         let app = AXUIElementCreateApplication(pid)
         // Runs on main, and a hung app would otherwise hold the focus write
@@ -766,19 +773,26 @@ final class DockClickService {
         AXUIElementSetAttributeValue(app, kAXFocusedWindowAttribute as CFString, rearWindow)
     }
 
-    /// The passed windows that the WindowServer currently lists on screen,
-    /// front to back. Windows on other Spaces are not in that list, which is
-    /// wanted: cycling from the Dock must not yank the user across Spaces.
+    /// The passed unminimized windows that the WindowServer currently lists
+    /// on screen, front to back, followed by the minimized windows. Unminimized
+    /// windows on other Spaces are not in that list, which is wanted: cycling
+    /// from the Dock must not yank the user across Spaces to reach a window
+    /// that is already up. Minimized windows have no on-screen entry to check,
+    /// so they are always included, even if restoring one changes Spaces.
     ///
     /// Both the decision to cycle and the raise read this list. They used to
     /// disagree — the decision counted every AX window, Spaces included, so a
     /// Space holding one window still promised a rotation and the raise then
     /// had to guess (issue #1204).
-    private static func cycleCandidates(pid: pid_t, windows: [AXUIElement]) -> [AXUIElement] {
-        let ids = windows.map { AXWindowResolver.windowID(for: $0) }
+    private static func cycleCandidates(pid: pid_t,
+                                        unminimized: [AXUIElement],
+                                        minimized: [AXUIElement]) -> [AXUIElement] {
+        let ids = unminimized.map { AXWindowResolver.windowID(for: $0) }
         let indices = DockClickSupport.cycleCandidateIndices(
             windowIDs: ids,
-            onScreenFrontToBack: onScreenWindowIDs(pid: pid))
+            onScreenFrontToBack: onScreenWindowIDs(pid: pid),
+            minimizedCount: minimized.count)
+        let windows = unminimized + minimized
         return indices.map { windows[$0] }
     }
 
