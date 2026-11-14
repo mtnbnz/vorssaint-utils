@@ -51,6 +51,10 @@ enum SwitcherAccessibilitySnapshotTests {
 
         enum SpaceWindowBridge {
             static func isExcludedFromWindowCycle(_ id: CGWindowID) -> Bool { false }
+            /// The window server's Spaces per window. A missing entry is an
+            /// unanswered query.
+            static var windowSpaces: [CGWindowID: [UInt64]] = [:]
+            static func resolvedSpaces(of id: CGWindowID) -> [UInt64]? { windowSpaces[id] }
         }
 
         static func AXUIElementCreateApplication(_ pid: pid_t) -> Window {
@@ -117,6 +121,7 @@ enum SwitcherAccessibilitySnapshotTests {
             Reader.listResult = .success
             Reader.batchRequests = []
             Reader.batchOptions = []
+            Reader.SpaceWindowBridge.windowSpaces = [:]
         }
         func snapshot(_ windows: [Window], screenFrames: [CGRect] = [],
                       isCancelled: () -> Bool = { false }) -> Reader.AccessibilityWindowSnapshotList? {
@@ -278,6 +283,21 @@ enum SwitcherAccessibilitySnapshotTests {
         suite.expect(independentFields?.byID.count == 4 && independentFields?.unansweredIDs.isEmpty == true
                         && independentFields?.byID[4]?.isNativeFullscreen == true,
                      "fullscreen, minimized and standard windows keep their independent classification evidence")
+
+        // Minimizing a native tab group marks every tab as minimized, but only
+        // the selected tab stays on a Space. The others are not switcher
+        // entries of their own.
+        let minimizedTab = [kAXMinimizedAttribute as String: true]
+        Reader.SpaceWindowBridge.windowSpaces = [1: [1], 2: []]
+        let tabGroup = snapshot([Window(1, attributes: minimizedTab),
+                                 Window(2, attributes: minimizedTab),
+                                 Window(3, attributes: minimizedTab)])
+        suite.expect(tabGroup?.byID[1]?.isMinimized == true && tabGroup?.byID[2] == nil
+                        && !keeps(2, in: tabGroup),
+                     "a background tab of a minimized tab group is left out beside the minimized tab")
+        suite.expect(tabGroup?.byID[3]?.isMinimized == true,
+                     "a minimized window stays when the window server cannot say which Space it is on")
+        Reader.SpaceWindowBridge.windowSpaces = [:]
 
         let shortResponse = Window(1)
         shortResponse.batchValues = ["AXWindow", "AXStandardWindow"]

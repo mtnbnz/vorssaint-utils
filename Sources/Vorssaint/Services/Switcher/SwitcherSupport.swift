@@ -1424,6 +1424,20 @@ enum SwitcherSupport {
         return allowsUnverifiedHiddenSpace || isOrderedIn == true
     }
 
+    /// Whether a window Accessibility reports as minimized is really a
+    /// background tab of a minimized native tab group. Minimizing a tab group
+    /// marks every tab's window as miniaturized, so AppKit lists each one as
+    /// its own minimized window, and the window server tags all of them as
+    /// minimized too. Only the selected tab keeps its Space, though: a
+    /// minimized window stays on the Space it left, while a background tab
+    /// belongs to none (measured on macOS 26.7 with Finder). Without this, a
+    /// minimized tabbed window shows once per tab in the switcher. When the
+    /// Space query does not answer, the window keeps its earlier treatment.
+    static func isBackgroundTabOfMinimizedGroup(accessibilityReportsMinimized: Bool,
+                                                windowSpaces: [UInt64]?) -> Bool {
+        accessibilityReportsMinimized && windowSpaces?.isEmpty == true
+    }
+
     /// Whether a WindowServer surface whose owner never answered Accessibility
     /// is a stale leftover instead of a real window (issue #807). The ghost
     /// veto normally comes from the Accessibility cross-check, but a busy or

@@ -1419,6 +1419,18 @@ enum SwitcherModelFeatureTests {
                                                    isExcludedFromWindowCycle: { false },
                                                    isLeftover: { true }),
                "an owner that never answered still loses its leftover surfaces")
+        suite.expect(SwitcherSupport.isBackgroundTabOfMinimizedGroup(
+            accessibilityReportsMinimized: true, windowSpaces: []),
+               "a background tab of a minimized tab group is not its own entry")
+        suite.expect(!SwitcherSupport.isBackgroundTabOfMinimizedGroup(
+            accessibilityReportsMinimized: true, windowSpaces: [1]),
+               "the minimized tab that keeps its Space stays in the switcher")
+        suite.expect(!SwitcherSupport.isBackgroundTabOfMinimizedGroup(
+            accessibilityReportsMinimized: true, windowSpaces: nil),
+               "a minimized window stays when the Space query cannot answer")
+        suite.expect(!SwitcherSupport.isBackgroundTabOfMinimizedGroup(
+            accessibilityReportsMinimized: false, windowSpaces: []),
+               "a window that is not minimized is not judged as a minimized tab")
         let helperID: CGWindowID = 7
         let workspaceID: CGWindowID = 8
         let flagged = { (id: CGWindowID) in id == helperID }

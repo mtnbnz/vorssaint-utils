@@ -1338,6 +1338,14 @@ enum WindowEnumerator {
         guard !isCancelled() else { return .notUserFacing }
         if attributes.isNativeFullscreen { return .userFacing }
         if attributes.bool(.minimized), attributes.string(.role) == (kAXWindowRole as String) {
+            // A minimized tab group lists every tab as a minimized window;
+            // only the selected tab, the one still on a Space, is an entry.
+            if let windowID = AXWindowResolver.windowID(for: window),
+               SwitcherSupport.isBackgroundTabOfMinimizedGroup(
+                   accessibilityReportsMinimized: true,
+                   windowSpaces: SpaceWindowBridge.resolvedSpaces(of: windowID)) {
+                return .notUserFacing
+            }
             return .userFacing
         }
         guard !SwitcherSupport.isUnansweredAccessibilityRead(attributes.error(for: .subrole)) else {
