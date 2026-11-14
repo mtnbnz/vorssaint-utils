@@ -82,11 +82,15 @@ struct SwitcherView: View {
     @AppStorage(DefaultsKey.switcherShowShortcutHints) private var showsShortcutHints = true
     @AppStorage(DefaultsKey.switcherShortcut) private var switcherShortcutStorage = GlobalShortcut.switcherDefault.storageValue
     @AppStorage(DefaultsKey.switcherWindowShortcut) private var switcherWindowShortcutStorage = GlobalShortcut.switcherWindowDefault.storageValue
+    @AppStorage(DefaultsKey.verticalWindowSwitcher) private var verticalWindowSwitcher = false
 
     var body: some View {
-        if SwitcherSupport.usesIconRowLayout(iconRowMode: iconRowMode,
-                                             simpleMode: simpleMode),
-           !switcher.windows.isEmpty {
+        if verticalWindowSwitcher {
+            listPanel
+        }
+        else if SwitcherSupport.usesIconRowLayout(iconRowMode: iconRowMode,
+                                                  simpleMode: simpleMode),
+                !switcher.windows.isEmpty {
             iconRowPanel
         } else {
             standardPanel
@@ -1227,6 +1231,232 @@ private struct WindowCard: View {
         .opacity(showsCloseButton ? 1 : 0)
         .animation(.easeOut(duration: 0.12), value: showsCloseButton)
         .allowsHitTesting(showsCloseButton)
+        .onHover { isCloseHovering = $0 }
+        .help(l10n.s.dockPreviewCloseWindow)
+        .accessibilityLabel(l10n.s.dockPreviewCloseWindow)
+    }
+}
+
+// MARK: - Vertical list mode
+
+enum SwitcherListLayout {
+    static let width: CGFloat = 480
+    static let rowHeight: CGFloat = 46
+    static let rowSpacing: CGFloat = 2
+    static let iconSize: CGFloat = 30
+    static let padding: CGFloat = 8
+    static let cornerRadius: CGFloat = 18
+    static let rowCornerRadius: CGFloat = 10
+    /// Share of the screen's visible height the panel may use, matching the grid.
+    static let usableHeightFraction: CGFloat = 0.85
+
+    /// Rows that fit on a screen with this visible frame; rows past this
+    /// scroll, following the selection. Always at least one.
+    static func maxVisibleRows(screenVisibleFrame: CGRect, searchTopInset: CGFloat = 0) -> Int {
+        let usableHeight = screenVisibleFrame.height * usableHeightFraction - searchTopInset
+        let fit = (usableHeight - padding * 2 + rowSpacing) / (rowHeight + rowSpacing)
+        return max(1, Int(fit))
+    }
+
+    static func visibleRows(itemCount: Int, screenVisibleFrame: CGRect,
+                            searchTopInset: CGFloat = 0) -> Int {
+        max(1, min(itemCount, maxVisibleRows(screenVisibleFrame: screenVisibleFrame,
+                                             searchTopInset: searchTopInset)))
+    }
+
+    /// Panel size for this many shown rows, without the search inset (add
+    /// `searchTopInset` on top).
+    static func panelSize(visibleRows: Int) -> CGSize {
+        let rows = CGFloat(max(1, visibleRows))
+        let height = rows * rowHeight
+            + max(0, rows - 1) * rowSpacing
+            + padding * 2
+        return CGSize(width: width, height: height)
+    }
+}
+ 
+extension SwitcherView {
+    /// The whole panel in list mode: one backdrop, rows stacked vertically.
+    var listPanel: some View {
+        let size = SwitcherListLayout.panelSize(visibleRows: switcher.listVisibleRows)
+        let shape = RoundedRectangle(cornerRadius: SwitcherListLayout.cornerRadius, style: .continuous)
+        return windowList
+            .padding(SwitcherListLayout.padding)
+            .padding(.top, switcher.searchTopInset)
+            .frame(width: size.width,
+                   height: size.height + switcher.searchTopInset,
+                   alignment: .top)
+            .background(HUDBackdrop(cornerRadius: SwitcherListLayout.cornerRadius))
+            .clipShape(shape)
+            .overlay(alignment: .topTrailing) {
+                searchChip
+            }
+            .overlay(
+                shape.strokeBorder(SwitcherIconStyle.stroke, lineWidth: 1)
+            )
+    }
+ 
+    private var windowList: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: SwitcherListLayout.rowSpacing) {
+                    ForEach(Array(switcher.windows.enumerated()), id: \.element.id) { index, window in
+                        SwitcherListRow(window: window,
+                                        isSelected: index == switcher.selectedIndex,
+                                        animatesSelection: !instantSelection,
+                                        onCommit: {
+                                            switcher.select(index: index)
+                                            switcher.commitSession()
+                                        },
+                                        onClose: {
+                                            switcher.closeWindow(window)
+                                        })
+                            .id(window.id)
+                            .onHover { hovering in
+                                if hovering {
+                                    switcher.hoverSelect(index: index)
+                                } else {
+                                    switcher.hoverSelectEnded(index: index)
+                                }
+                            }
+                    }
+                }
+            }
+            .scrollDisabled(switcher.windows.count <= switcher.listVisibleRows)
+            // A reverse start selects the last row before the list exists.
+            .onAppear { revealSelection(in: proxy, animated: false) }
+            .onChange(of: switcher.selectedIndex) { _, _ in
+                revealSelection(in: proxy, animated: true)
+            }
+            // A search or a closed window can swap the item under the index.
+            .onChange(of: switcher.windows.map(\.id)) { _, _ in
+                revealSelection(in: proxy, animated: false)
+            }
+        }
+    }
+}
+ 
+/// One row: app icon, window title, app name, then state badges and a close
+/// button that appears on hover.
+private struct SwitcherListRow: View {
+    let window: SwitcherItem
+    let isSelected: Bool
+    let animatesSelection: Bool
+    let onCommit: () -> Void
+    let onClose: () -> Void
+ 
+    @ObservedObject private var l10n = L10n.shared
+    @State private var isHovering = false
+    @State private var isCloseHovering = false
+    @State private var suppressNextCommit = false
+ 
+    private var showsCloseButton: Bool {
+        isHovering && window.windowID != nil
+    }
+ 
+    var body: some View {
+        HStack(spacing: 10) {
+            appIcon
+ 
+            VStack(alignment: .leading, spacing: 1) {
+                Text(window.windowLabel(noOpenWindow: l10n.s.switcherNoOpenWindow))
+                    .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+                    .foregroundStyle(window.isAppEntry ? SwitcherIconStyle.secondaryText
+                                                       : SwitcherIconStyle.text)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Text(window.appName)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(SwitcherIconStyle.secondaryText)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+ 
+            statusBadges
+            closeButton
+        }
+        .padding(.horizontal, 10)
+        .frame(height: SwitcherListLayout.rowHeight)
+        .background(
+            RoundedRectangle(cornerRadius: SwitcherListLayout.rowCornerRadius, style: .continuous)
+                .fill(isSelected ? SwitcherIconStyle.tileSelected : Color.clear)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: SwitcherListLayout.rowCornerRadius, style: .continuous)
+                .strokeBorder(isSelected ? Color.accentColor.opacity(0.9) : Color.clear,
+                              lineWidth: 1.25)
+        )
+        .contentShape(RoundedRectangle(cornerRadius: SwitcherListLayout.rowCornerRadius,
+                                       style: .continuous))
+        .onTapGesture {
+            guard !suppressNextCommit else { return }
+            onCommit()
+        }
+        .onHover { isHovering = $0 }
+        .animation(animatesSelection ? .easeOut(duration: 0.12) : nil, value: isSelected)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(window.spokenLabel(noOpenWindow: l10n.s.switcherNoOpenWindow,
+                                               hiddenApp: l10n.s.panelHiddenItem,
+                                               otherDesktop: l10n.s.switcherOtherDesktop))
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
+ 
+    @ViewBuilder
+    private var appIcon: some View {
+        Group {
+            if let icon = window.appIcon {
+                Image(nsImage: icon)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .switcherHiddenAppBadge(window.isAppHidden, size: 13)
+            } else {
+                Color.clear
+            }
+        }
+        .frame(width: SwitcherListLayout.iconSize, height: SwitcherListLayout.iconSize)
+    }
+ 
+    private var statusBadges: some View {
+        HStack(spacing: 6) {
+            if window.isMinimized {
+                statusBadge("minus.rectangle")
+            }
+            if window.isFullscreen {
+                statusBadge("arrow.up.left.and.arrow.down.right")
+            }
+            if window.isOnHiddenSpace {
+                statusBadge("rectangle.stack")
+            }
+        }
+    }
+ 
+    private func statusBadge(_ systemName: String) -> some View {
+        Image(systemName: systemName)
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundStyle(SwitcherIconStyle.tertiaryText)
+            .accessibilityHidden(true)
+    }
+ 
+    /// Always takes its space so titles don't shift when it appears on hover.
+    private var closeButton: some View {
+        Button {
+            suppressNextCommit = true
+            onClose()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                suppressNextCommit = false
+            }
+        } label: {
+            Image(systemName: isCloseHovering ? "xmark.circle.fill" : "xmark.circle")
+                .font(.system(size: 15, weight: .semibold))
+                .frame(width: 22, height: 22)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(isCloseHovering ? SwitcherIconStyle.text : SwitcherIconStyle.secondaryText)
+        .opacity(showsCloseButton ? 1 : 0)
+        .allowsHitTesting(showsCloseButton)
+        .animation(animatesSelection ? .easeOut(duration: 0.12) : nil, value: showsCloseButton)
         .onHover { isCloseHovering = $0 }
         .help(l10n.s.dockPreviewCloseWindow)
         .accessibilityLabel(l10n.s.dockPreviewCloseWindow)

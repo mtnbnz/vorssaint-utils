@@ -149,6 +149,7 @@ enum SwitcherHoverSelectionTests {
         var usesIconRowLayout = false
         var usesWindowRow = false
         var simpleModeEnabled = false
+        var verticalWindowSwitcher = false
         var grid = Grid()
         var iconRowLayout = Row()
         var shiftBackNavigationHeld = false
@@ -243,7 +244,7 @@ enum SwitcherHoverSelectionTests {
         livePreference.select(index: 0)
         suite.expect(livePreference.selectedIndex == 3 && livePreference.hoveredWindowIndex == 4,
                      "an inactive session rejects selection even while entries are still present")
-        for click in 0..<5 {
+        for click in 0..<6 {
             let service = fresh()
             Pointer.mouseLocation.x += 10
             service.hoverSelect(index: 3)
@@ -253,7 +254,8 @@ enum SwitcherHoverSelectionTests {
             case 1: service.clickPreview(index: 4)
             case 2: service.clickTitle(index: 4)
             case 3: service.clickAppIcon(index: 4)
-            default: service.clickWindowIcon(index: 4)
+            case 4: service.clickWindowIcon(index: 4)
+            default: service.clickListRow(index: 4)
             }
             suite.expect(Activator.activated == [expected] && !service.sessionActive,
                          "production click callback \(click) opens the clicked item with hover ignored")

@@ -1960,9 +1960,10 @@ def main():
     click_bodies = re.findall(
         r"(?:onCommit|onSelect): \{\n(\s+switcher\.select\(index: (?:index|entry\.offset)\)\n"
         r"\s+switcher\.commitSession\(\)\n)\s*\}", (ROOT / switcher).read_text())
-    click_names = ["clickCard", "clickPreview", "clickTitle", "clickAppIcon", "clickWindowIcon"]
+    click_names = ["clickCard", "clickPreview", "clickTitle", "clickAppIcon", "clickWindowIcon",
+                   "clickListRow"]
     if len(click_bodies) != len(click_names):
-        raise ValueError("Expected all five switcher click callbacks")
+        raise ValueError(f"Expected {len(click_names)} switcher click callbacks, found {len(click_bodies)}")
     write("SwitcherHoverSelection.swift", "import AppKit\nimport Combine\n"
           + "extension SwitcherHoverSelectionTests {\n"
           + declaration(switcher_service, "private struct SwitcherSourceContext").replace("private struct", "struct", 1)
@@ -2031,8 +2032,10 @@ def main():
           + "extension SwitcherSearchLayoutTests {\n"
           + declaration(switcher_service, "struct SwitcherGrid:")
           + declaration(switcher, "private enum SwitcherIconStyle {").replace("private enum", "enum", 1)
+          + declaration(switcher, "enum SwitcherListLayout {")
           + "}\nextension SwitcherSearchLayoutTests.Model {\n"
           + "typealias SwitcherGrid = SwitcherSearchLayoutTests.SwitcherGrid\n"
+          + "typealias SwitcherListLayout = SwitcherSearchLayoutTests.SwitcherListLayout\n"
           + "".join(declaration(switcher_service, prefix).replace("private ", "", 1)
                     for prefix in ["    private var currentPanelSize:", "    var searchTopInset:",
                                    "    private func pinSearch()"])

@@ -16,6 +16,8 @@ struct SettingsPageStrings {
     let switcherLayoutWindowsCaption: String
     let switcherLayoutIcons: String
     let switcherLayoutSimple: String
+    let switcherLayoutList: String
+    let switcherLayoutListCaption: String
 }
 
 extension FeatureStrings {
@@ -51,7 +53,9 @@ extension SettingsPageStrings {
         switcherLayoutWindows: "Мініатюри вікон",
         switcherLayoutWindowsCaption: "По одній мініатюрі для кожного вікна, включно зі згорнутими.",
         switcherLayoutIcons: "Великі значки",
-        switcherLayoutSimple: "Простий список"
+        switcherLayoutSimple: "Простий список",
+        switcherLayoutList: "Вертикальний список",
+        switcherLayoutListCaption: "Вікна в рядках вертикально, по одному на рядок."
     )
 
     static let enUS = SettingsPageStrings(
@@ -64,7 +68,9 @@ extension SettingsPageStrings {
         switcherLayoutWindows: "Window previews",
         switcherLayoutWindowsCaption: "One preview per window, minimized ones included.",
         switcherLayoutIcons: "Large icons",
-        switcherLayoutSimple: "Simple list"
+        switcherLayoutSimple: "Simple list",
+        switcherLayoutList: "Vertical list",
+        switcherLayoutListCaption: "Windows stacked vertically, one per row."
     )
 
     static let ptBR = SettingsPageStrings(
@@ -77,7 +83,9 @@ extension SettingsPageStrings {
         switcherLayoutWindows: "Previews das janelas",
         switcherLayoutWindowsCaption: "Um preview por janela, incluindo as minimizadas.",
         switcherLayoutIcons: "Ícones grandes",
-        switcherLayoutSimple: "Lista simples"
+        switcherLayoutSimple: "Lista simples",
+        switcherLayoutList: "Lista vertical",
+        switcherLayoutListCaption: "Janelas em lista vertical, uma por linha."
     )
 
     static let tr = SettingsPageStrings(
@@ -90,7 +98,9 @@ extension SettingsPageStrings {
         switcherLayoutWindows: "Pencere önizlemeleri",
         switcherLayoutWindowsCaption: "Her pencere için bir önizleme, simge durumundakiler dahil.",
         switcherLayoutIcons: "Büyük simgeler",
-        switcherLayoutSimple: "Basit liste"
+        switcherLayoutSimple: "Basit liste",
+        switcherLayoutList: "Dikey liste",
+        switcherLayoutListCaption: "Pencereler dikey sırada, her satırda bir tane."
     )
 
     static let ru = SettingsPageStrings(
@@ -103,7 +113,9 @@ extension SettingsPageStrings {
         switcherLayoutWindows: "Миниатюры окон",
         switcherLayoutWindowsCaption: "По миниатюре на каждое окно, включая свёрнутые.",
         switcherLayoutIcons: "Крупные значки",
-        switcherLayoutSimple: "Простой список"
+        switcherLayoutSimple: "Простой список",
+        switcherLayoutList: "Вертикальный список",
+        switcherLayoutListCaption: "Окна в вертикальном списке, по одному в строке."
     )
 
     static let es = SettingsPageStrings(
@@ -116,7 +128,9 @@ extension SettingsPageStrings {
         switcherLayoutWindows: "Vistas previas de ventanas",
         switcherLayoutWindowsCaption: "Una vista previa por ventana, incluidas las minimizadas.",
         switcherLayoutIcons: "Iconos grandes",
-        switcherLayoutSimple: "Lista simple"
+        switcherLayoutSimple: "Lista simple",
+        switcherLayoutList: "Lista vertical",
+        switcherLayoutListCaption: "Ventanas en lista vertical, una por fila."
     )
 
     static let sk = SettingsPageStrings(
@@ -129,7 +143,9 @@ extension SettingsPageStrings {
         switcherLayoutWindows: "Náhľady okien",
         switcherLayoutWindowsCaption: "Jeden náhľad na okno, vrátane minimalizovaných.",
         switcherLayoutIcons: "Veľké ikony",
-        switcherLayoutSimple: "Jednoduchý zoznam"
+        switcherLayoutSimple: "Jednoduchý zoznam",
+        switcherLayoutList: "Zvislý zoznam",
+        switcherLayoutListCaption: "Okná v zvislom zozname, jedno na riadok."
     )
 
     static let de = SettingsPageStrings(
@@ -142,7 +158,9 @@ extension SettingsPageStrings {
         switcherLayoutWindows: "Fenstervorschauen",
         switcherLayoutWindowsCaption: "Eine Vorschau pro Fenster, auch für minimierte.",
         switcherLayoutIcons: "Große Symbole",
-        switcherLayoutSimple: "Einfache Liste"
+        switcherLayoutSimple: "Einfache Liste",
+        switcherLayoutList: "Vertikale Liste",
+        switcherLayoutListCaption: "Fenster vertikal gestapelt, eines pro Zeile."
     )
 
     static let fr = SettingsPageStrings(
@@ -155,7 +173,9 @@ extension SettingsPageStrings {
         switcherLayoutWindows: "Aperçus des fenêtres",
         switcherLayoutWindowsCaption: "Un aperçu par fenêtre, fenêtres réduites comprises.",
         switcherLayoutIcons: "Grandes icônes",
-        switcherLayoutSimple: "Liste simple"
+        switcherLayoutSimple: "Liste simple",
+        switcherLayoutList: "Liste verticale",
+        switcherLayoutListCaption: "Fenêtres empilées verticalement, une par ligne."
     )
 
     static let it = SettingsPageStrings(
@@ -168,7 +188,9 @@ extension SettingsPageStrings {
         switcherLayoutWindows: "Anteprime delle finestre",
         switcherLayoutWindowsCaption: "Un’anteprima per finestra, comprese quelle contratte.",
         switcherLayoutIcons: "Icone grandi",
-        switcherLayoutSimple: "Elenco semplice"
+        switcherLayoutSimple: "Elenco semplice",
+        switcherLayoutList: "Elenco verticale",
+        switcherLayoutListCaption: "Finestre in un elenco verticale, una per riga."
     )
 
     static let ja = SettingsPageStrings(
@@ -181,7 +203,9 @@ extension SettingsPageStrings {
         switcherLayoutWindows: "ウインドウのプレビュー",
         switcherLayoutWindowsCaption: "ウインドウごとにプレビューを表示。しまったウインドウも含みます。",
         switcherLayoutIcons: "大きなアイコン",
-        switcherLayoutSimple: "シンプルなリスト"
+        switcherLayoutSimple: "シンプルなリスト",
+        switcherLayoutList: "縦リスト",
+        switcherLayoutListCaption: "縦向きのリストにウインドウを1行ずつ表示。"
     )
 
     static let ko = SettingsPageStrings(
@@ -194,7 +218,9 @@ extension SettingsPageStrings {
         switcherLayoutWindows: "윈도우 미리보기",
         switcherLayoutWindowsCaption: "윈도우마다 미리보기 하나, 축소된 윈도우도 포함합니다.",
         switcherLayoutIcons: "큰 아이콘",
-        switcherLayoutSimple: "간단한 목록"
+        switcherLayoutSimple: "간단한 목록",
+        switcherLayoutList: "세로 목록",
+        switcherLayoutListCaption: "세로 목록에 윈도우를 한 줄씩 표시합니다."
     )
 
     static let zhHans = SettingsPageStrings(
@@ -207,7 +233,9 @@ extension SettingsPageStrings {
         switcherLayoutWindows: "窗口预览",
         switcherLayoutWindowsCaption: "每个窗口一张预览，包括已最小化的窗口。",
         switcherLayoutIcons: "大图标",
-        switcherLayoutSimple: "简单列表"
+        switcherLayoutSimple: "简单列表",
+        switcherLayoutList: "垂直列表",
+        switcherLayoutListCaption: "窗口垂直列出，每行一个。"
     )
 
     static let zhTW = SettingsPageStrings(
@@ -220,7 +248,9 @@ extension SettingsPageStrings {
         switcherLayoutWindows: "視窗預覽",
         switcherLayoutWindowsCaption: "每個視窗一張預覽，包括已縮到最小的視窗。",
         switcherLayoutIcons: "大圖示",
-        switcherLayoutSimple: "簡單列表"
+        switcherLayoutSimple: "簡單列表",
+        switcherLayoutList: "垂直清單",
+        switcherLayoutListCaption: "視窗垂直列出，每行一個。"
     )
 
     static let zhHK = SettingsPageStrings(
@@ -233,6 +263,8 @@ extension SettingsPageStrings {
         switcherLayoutWindows: "視窗預覽",
         switcherLayoutWindowsCaption: "每個視窗一張預覽，包括已縮到最小的視窗。",
         switcherLayoutIcons: "大圖示",
-        switcherLayoutSimple: "簡單列表"
+        switcherLayoutSimple: "簡單列表",
+        switcherLayoutList: "垂直清單",
+        switcherLayoutListCaption: "視窗垂直列出，每行一個。"
     )
 }

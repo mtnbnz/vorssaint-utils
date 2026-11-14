@@ -133,6 +133,7 @@ enum DefaultsKey {
     static let switcherCurrentDisplayOnly = "switcherCurrentDisplayOnly" // list only windows on the display under the pointer (issue #1391)
     static let switcherMaxColumns = "switcherMaxColumns" // 0 = Auto, else the most items per row (SwitcherSupport.maxColumnsRange)
     static let minimalWindowPreviews = "minimalWindowPreviews"
+    static let verticalWindowSwitcher = "verticalWindowSwitcher"
     static let dockPreviewEnabled = "dockPreviewEnabled"
     static let dockPreviewKeepDockVisible = "dockPreviewKeepDockVisible"
     static let dockPreviewRestoreAutohide = "dockPreviewRestoreAutohide" // local crash recovery; never backed up

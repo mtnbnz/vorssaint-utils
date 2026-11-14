@@ -27,6 +27,7 @@ enum SwitcherScrollContract {
         var searchQuery = ""
         var screenWidth: CGFloat = 1440
         var sessionScope: SwitcherSessionScope = .allApps
+        var verticalWindowSwitcher = false
         func seed(_ counts: [Int], selected: Int, simple: Bool = false) {
             windows = counts.enumerated().flatMap { p, n in (0..<n).map { Item(id: "\(p)-\($0)", pid: p) } }
             sessionItems = windows
@@ -42,7 +43,7 @@ enum SwitcherScrollContract {
                                     screenVisibleFrame: CGRect(x: 0, y: 0, width: screenWidth, height: 900))
         }
         func recomputeLayouts(for items: [Item]) { recompute() }
-        func resizePanel() {}
+        func resizePanel(animated: Bool = true) {}
         func select(index: Int) { selectedIndex = index; recompute() }
         func closeWindow(_ item: Item) {
             let state = SwitcherSupport.closeState(afterRemoving: item.id, itemIDs: windows.map(\.id), selectedIndex: selectedIndex)
